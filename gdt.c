@@ -7,120 +7,120 @@ struct tss tss = {0};
 
 struct gdtdesc
 {
-        u16     limit_15_0;
-        u16     base_15_0;
-        u8      base_23_16;
-        u8      type : 4;
-        u8      s : 1;
-        u8      dpl : 2;
-        u8      p : 1;
-        u8      lim_19_16 : 4;
-        u8      avl : 1;
-        u8      l : 1;
-        u8      db : 1;
-        u8      g : 1;
-        u8      base_31_24;
+	u16 limit_15_0;
+	u16 base_15_0;
+	u8 base_23_16;
+	u8 type : 4;
+	u8 s : 1;
+	u8 dpl : 2;
+	u8 p : 1;
+	u8 lim_19_16 : 4;
+	u8 avl : 1;
+	u8 l : 1;
+	u8 db : 1;
+	u8 g : 1;
+	u8 base_31_24;
 } PACKED;
 
 struct tssdesc
 {
-        u16     limit_15_0;
-        u16     base_15_0;
-        u8      base_23_16;
-        u8      type : 4;
-        u8      s : 1;
-        u8      dpl : 2;
-        u8      p : 1;
-        u8      lim_19_16 : 4;
-        u8      avl : 1;
-        u8      l : 1;
-        u8      db : 1;
-        u8      g : 1;
-        u8      base_31_24;
-        u32     base_63_32;
-        u32     reserved;
+	u16 limit_15_0;
+	u16 base_15_0;
+	u8 base_23_16;
+	u8 type : 4;
+	u8 s : 1;
+	u8 dpl : 2;
+	u8 p : 1;
+	u8 lim_19_16 : 4;
+	u8 avl : 1;
+	u8 l : 1;
+	u8 db : 1;
+	u8 g : 1;
+	u8 base_31_24;
+	u32 base_63_32;
+	u32 reserved;
 } PACKED;
 
 static void
 set_seg(ulong *gdt, int type, u32 base, u32 limit, int dpl, int l)
 {
-        struct gdtdesc *desc = (struct gdtdesc *)gdt;
+	struct gdtdesc *desc = (struct gdtdesc *)gdt;
 
-        desc->limit_15_0 = (limit >> 12) & 0xffff;
-        desc->base_15_0 = base & 0xffff;
-        desc->base_23_16 = (base >> 16) & 0xff;
-        desc->type = type;
-        desc->s = 1;
-        desc->dpl = dpl;
-        desc->p = 1;
-        desc->lim_19_16 = (limit >> 28) & 0xf;
-        desc->avl = 0;
-        desc->l = l;
-        desc->db = 0;
-        desc->g = 1;
-        desc->base_31_24 = (base >> 24) & 0xff;
+	desc->limit_15_0 = (limit >> 12) & 0xffff;
+	desc->base_15_0 = base & 0xffff;
+	desc->base_23_16 = (base >> 16) & 0xff;
+	desc->type = type;
+	desc->s = 1;
+	desc->dpl = dpl;
+	desc->p = 1;
+	desc->lim_19_16 = (limit >> 28) & 0xf;
+	desc->avl = 0;
+	desc->l = l;
+	desc->db = 0;
+	desc->g = 1;
+	desc->base_31_24 = (base >> 24) & 0xff;
 }
 
 static void
 set_tssseg(ulong *gdt, int type, u64 base, u32 limit, int dpl)
 {
-        struct tssdesc *desc = (struct tssdesc *)gdt;
+	struct tssdesc *desc = (struct tssdesc *)gdt;
 
-        desc->limit_15_0 = limit & 0xffff;
-        desc->base_15_0 = base & 0xffff;
-        desc->base_23_16 = (base >> 16) & 0xff;
-        desc->type = type;
-        desc->s = 0;
-        desc->dpl = dpl;
-        desc->p = 1;
-        desc->lim_19_16 = (limit >> 16) & 0xf;
-        desc->avl = 0;
-        desc->l = 0;
-        desc->db = 0;
-        desc->g = 0;
-        desc->base_31_24 = (base >> 24) & 0xff;
-        desc->base_63_32 = base >> 32;
-        desc->reserved = 0;
+	desc->limit_15_0 = limit & 0xffff;
+	desc->base_15_0 = base & 0xffff;
+	desc->base_23_16 = (base >> 16) & 0xff;
+	desc->type = type;
+	desc->s = 0;
+	desc->dpl = dpl;
+	desc->p = 1;
+	desc->lim_19_16 = (limit >> 16) & 0xf;
+	desc->avl = 0;
+	desc->l = 0;
+	desc->db = 0;
+	desc->g = 0;
+	desc->base_31_24 = (base >> 24) & 0xff;
+	desc->base_63_32 = base >> 32;
+	desc->reserved = 0;
 }
 
 static void
 tss_init(void)
 {
-        set_tssseg(gdt + SEG_TSS, STA_TSSA, (u64)&tss, sizeof(tss) - 1, DPL_KERNEL);
+	set_tssseg(gdt + SEG_TSS, STA_TSSA, (u64)&tss, sizeof(tss) - 1, DPL_KERNEL);
 }
 
 static void
 config_gdt(void)
 {
-        gdt[SEG_NULL] = 0;     // NULL Descriptor
-        set_seg(gdt + SEG_KCODE32, STA_X|STA_R, 0, 0xffffffff, DPL_KERNEL, 0);
-        set_seg(gdt + SEG_KDATA32, STA_W, 0, 0xffffffff, DPL_KERNEL, 0);
-        set_seg(gdt + SEG_KCODE, STA_X|STA_R, 0, 0xffffffff, DPL_KERNEL, 1);
-        set_seg(gdt + SEG_KDATA, STA_W, 0, 0xffffffff, DPL_KERNEL, 1);
-        set_seg(gdt + SEG_UCODE, STA_X|STA_R, 0, 0xffffffff, DPL_USER, 1);
-        set_seg(gdt + SEG_UDATA, STA_W, 0, 0xffffffff, DPL_USER, 1);
+	gdt[SEG_NULL] = 0;     // NULL Descriptor
+	set_seg(gdt + SEG_KCODE32, STA_X|STA_R, 0, 0xffffffff, DPL_KERNEL, 0);
+	set_seg(gdt + SEG_KDATA32, STA_W, 0, 0xffffffff, DPL_KERNEL, 0);
+	set_seg(gdt + SEG_KCODE, STA_X|STA_R, 0, 0xffffffff, DPL_KERNEL, 1);
+	set_seg(gdt + SEG_KDATA, STA_W, 0, 0xffffffff, DPL_KERNEL, 1);
+	set_seg(gdt + SEG_UCODE, STA_X|STA_R, 0, 0xffffffff, DPL_USER, 1);
+	set_seg(gdt + SEG_UDATA, STA_W, 0, 0xffffffff, DPL_USER, 1);
 
-        tss_init();
+	tss_init();
 }
 
 static inline void
 load_gdt(const ulong *gdt, ulong gdtsize)
 {
-        volatile u16 t[5];
+	volatile u16 t[5];
 
-        t[0] = (u16)gdtsize - 1;
-        t[1] = (u16)(ulong)gdt;
-        t[2] = (u16)((ulong)gdt >> 16);
-        t[3] = (u16)((ulong)gdt >> 32);
-        t[4] = (u16)((ulong)gdt >> 48);
+	t[0] = (u16)gdtsize - 1;
+	t[1] = (u16)(ulong)gdt;
+	t[2] = (u16)((ulong)gdt >> 16);
+	t[3] = (u16)((ulong)gdt >> 32);
+	t[4] = (u16)((ulong)gdt >> 48);
 
-        asm volatile ("lgdt (%0)" :: "r"(t));
+	asm volatile ("lgdt (%0)" :: "r"(t));
 }
 
 void
 seg_init (void)
 {
-        config_gdt();
-        load_gdt(gdt, sizeof gdt);
-        ltr(SEG_TSS << 3);
+	config_gdt();
+	load_gdt(gdt, sizeof gdt);
+	ltr(SEG_TSS << 3);
 }

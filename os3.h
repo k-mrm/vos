@@ -95,4 +95,12 @@ int ramdisk_read(struct buf *buf);
 int ramdisk_write(struct buf *buf);
 void ramdisk_init(void);
 
+struct buf *bread(int bno);
+struct buf *bootblock(void);
+struct buf *superblock(void);
+void brelease(struct buf *buf);
+void bcachefree(void);
+void bsync(void);
+void block_init(void);
+
 #endif
