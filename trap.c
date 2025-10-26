@@ -3,23 +3,23 @@
 
 enum gatetype
 {
-        GATEDESC_64_INTR = 0xe,
-        GATEDESC_64_TRAP = 0xf,
+	GATEDESC_64_INTR = 0xe,
+	GATEDESC_64_TRAP = 0xf,
 };
 
 struct gate
 {
-        u16 offset_0_15;
-        u16 sel;
-        u8  ist: 3;
-        u8  _rsrv0: 5;
-        u8  gatetype: 4;
-        u8  _zero: 1;
-        u8  dpl: 2;
-        u8  p: 1;
-        u16 offset_16_31;
-        u32 offset_32_63;
-        u32 _rsrv1;
+	u16 offset_0_15;
+	u16 sel;
+	u8  ist: 3;
+	u8  _rsrv0: 5;
+	u8  gatetype: 4;
+	u8  _zero: 1;
+	u8  dpl: 2;
+	u8  p: 1;
+	u16 offset_16_31;
+	u32 offset_32_63;
+	u32 _rsrv1;
 } PACKED;
 
 static struct gate idt[NR_INTERRUPT];
@@ -117,12 +117,12 @@ VECTOR(0xfc); VECTOR(0xfd); VECTOR(0xfe); VECTOR(0xff);
 // make vector table
 
 asm (
-        ".data \n"
-        "allvectors: \n"
+	".data \n"
+	"allvectors: \n"
 );
 
 #define VENTRY(_n)  \
-  asm (".quad __vector" #_n "_ \n")
+	asm (".quad __vector" #_n "_ \n")
 
 VENTRY(0x00); VENTRY(0x01); VENTRY(0x02); VENTRY(0x03);
 VENTRY(0x04); VENTRY(0x05); VENTRY(0x06); VENTRY(0x07);
@@ -196,89 +196,91 @@ asm (".text \n");
 static inline void
 load_idt(struct gate *idt, ulong idtsize)
 {
-        volatile u16 t[5];
+	volatile u16 t[5];
 
-        t[0] = (u16)idtsize - 1;
-        t[1] = (u16)(ulong)idt;
-        t[2] = (u16)((ulong)idt >> 16);
-        t[3] = (u16)((ulong)idt >> 32);
-        t[4] = (u16)((ulong)idt >> 48);
+	t[0] = (u16)idtsize - 1;
+	t[1] = (u16)(ulong)idt;
+	t[2] = (u16)((ulong)idt >> 16);
+	t[3] = (u16)((ulong)idt >> 32);
+	t[4] = (u16)((ulong)idt >> 48);
 
-        asm volatile ("lidt (%0)" :: "r"(t));
+	asm volatile ("lidt (%0)" :: "r"(t));
 }
 
 static inline void
 set_gate(struct gate *desc, ulong offset, u16 sel, enum gatetype type, u8 dpl)
 {
-        desc->offset_0_15   = (u16)offset;
-        desc->sel           = sel;
-        desc->ist           = 0;
-        desc->_rsrv0        = 0;
-        desc->gatetype      = type;
-        desc->_zero         = 0;
-        desc->dpl           = dpl;
-        desc->p             = 1;
-        desc->offset_16_31  = (u16)(offset >> 16);
-        desc->offset_32_63  = (u32)(offset >> 32);
-        desc->_rsrv1        = 0;
+	desc->offset_0_15   = (u16)offset;
+	desc->sel           = sel;
+	desc->ist           = 0;
+	desc->_rsrv0        = 0;
+	desc->gatetype      = type;
+	desc->_zero         = 0;
+	desc->dpl           = dpl;
+	desc->p             = 1;
+	desc->offset_16_31  = (u16)(offset >> 16);
+	desc->offset_32_63  = (u32)(offset >> 32);
+	desc->_rsrv1        = 0;
 }
 
 void
 trap_init(void)
 {
-        for (uint i = 0; i < NR_INTERRUPT; i++)
-                set_gate(idt + i, allvectors[i], SEG_KCODE << 3, GATEDESC_64_INTR, DPL_KERNEL);
+	for (uint i = 0; i < NR_INTERRUPT; i++)
+		set_gate(idt + i, allvectors[i], SEG_KCODE << 3, GATEDESC_64_INTR, DPL_KERNEL);
 	// syscall
-        set_gate(idt + 0x80, allvectors[0x80], SEG_KCODE << 3, GATEDESC_64_TRAP, DPL_USER);
+	set_gate(idt + 0x80, allvectors[0x80], SEG_KCODE << 3, GATEDESC_64_TRAP, DPL_USER);
 
-        load_idt(idt, sizeof idt);
+	load_idt(idt, sizeof idt);
 }
 
 static void
 pagefault(struct trapframe *tf)
 {
-        ulong faultaddr = cr2();
+	ulong faultaddr = cr2();
 
-        printk("page fault @%p (%p)\n", tf->rip, faultaddr);
-        printk("errcode %x\n", tf->errcode);
-        panic("gg");
+	printk("page fault @%p (%p)\n", tf->rip, faultaddr);
+	printk("errcode %x\n", tf->errcode);
+	panic("gg");
 }
 
 static void
 syscallint80(struct trapframe *tf)
 {
-        tf->rax = (u64)syscall(tf->rax, (void*)tf->rdi, (void*)tf->rsi, (void*)tf->rdx,
-                               (void*)tf->r10, (void *)tf->r8, (void *)tf->r9); 
+	tf->rax = (u64)syscall(tf->rax, (void*)tf->rdi, (void*)tf->rsi, (void*)tf->rdx,
+			       (void*)tf->r10, (void *)tf->r8, (void *)tf->r9); 
 }
 
 void 
 trap(struct trapframe *tf)
 {
-        struct cpu *cpu = mycpu();
-        struct proc *proc = cpu->proc;
-        int err;
+	struct cpu *cpu = mycpu();
+	struct proc *proc = cpu->proc;
+	int err;
 
-        if (proc)
-                proc->tf = tf;
+	if (proc)
+		proc->tf = tf;
 
-        switch (tf->trapno) {
+	switch (tf->trapno) {
 
-        case E_PF: pagefault(tf); break;
-        case E_GP: panic("GP");
-        case 0x80:      /* syscall */
+	case E_PF:
+		pagefault(tf); break;
+	case E_GP:
+		panic("GP");
+	case 0x80:      /* syscall */
 		syscallint80(tf);
 		break;
-        default:
+	default:
 		err = handle_irq(tf->trapno);
 		if (err)
 			panic("unknown trap %x", tf->trapno);
 		break;
 
-        }
+	}
 }
 
 Proc *
 __cswitch(struct context *prev, struct context *next, struct proc *pprev)
 {
-        return pprev;
+	return pprev;
 }

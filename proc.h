@@ -69,7 +69,7 @@ struct proc
 	struct cpu *cpu;
 	struct trapframe *tf;
 
-	u64 rsp;
+	ulong rsp;
 
         struct list procs;	// node of proctable
 	struct list rq;		// node of runqueue

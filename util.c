@@ -1,7 +1,7 @@
 #include <os3.h>
 
 void *
-memset(void *dst, int c, uint64_t n)
+memset(void *dst, int c, ulong n)
 {
         char *d = dst;
 
@@ -11,13 +11,13 @@ memset(void *dst, int c, uint64_t n)
 }
 
 void *
-memcpy(void *dst, const void *src, uint64_t n)
+memcpy(void *dst, const void *src, ulong n)
 {
         return memmove(dst, src, n);
 }
 
 void *
-memmove(void *dst, const void *src, uint64_t n)
+memmove(void *dst, const void *src, ulong n)
 {
         char *d = dst;
         const char *s = src;
@@ -58,8 +58,6 @@ unsigned int
 id_alloc(struct id *id)
 {
 	int i = id->n;
-
 	id->n++;
-
 	return i;
 }

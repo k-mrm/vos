@@ -50,8 +50,8 @@ typedef _Bool   bool;
 #define va_copy(d, s)   __builtin_va_copy (d, s)
 
 struct proc;
-struct context;
 struct multiboot2;
+struct buf;
 
 void uart_putc(char c);
 int uart_write(char *buf, int n);
@@ -79,12 +79,20 @@ int wait(int *status);
 void schedule(void);
 void wakeup(void *chan);
 void sleep(void *chan);
+struct proc *cswitch(ulong *prev, ulong *next, struct proc *pprev);
 
-void *memset(void *dst, int c, uint64_t n);
-void *memcpy(void *dst, const void *src, uint64_t n);
-void *memmove(void *dst, const void *src, uint64_t n);
+void *memset(void *dst, int c, ulong n);
+void *memcpy(void *dst, const void *src, ulong n);
+void *memmove(void *dst, const void *src, ulong n);
 char *strcpy(char *dst, const char *src);
 int strcmp(const char *s1, const char *s2);
 unsigned int id_alloc(struct id *id);
+
+int printk(const char *fmt, ...);
+int sprintf(char *buf, const char *fmt, ...);
+
+int ramdisk_read(struct buf *buf);
+int ramdisk_write(struct buf *buf);
+void ramdisk_init(void);
 
 #endif
